@@ -58,6 +58,7 @@ class Mage_CatalogSearch_Model_Advanced extends Mage_Core_Model_Abstract
      * @var array
      */
     protected $_searchCriterias = array();
+    protected $_searchCategories = array();
 
     /**
      * Current search engine
@@ -208,12 +209,18 @@ class Mage_CatalogSearch_Model_Advanced extends Mage_Core_Model_Abstract
                 $allConditions[$table][$attributeId] = $condition;
             }
         }
-        if ($allConditions) {
+        if (isset($values['category']) && count($values['category']) > 0) {
+            $this->_searchCategories = $values['category'];
+            $this->getProductCollection()
+                 ->joinField('category_id', 'catalog/category_product', 'category_id', 'product_id=entity_id', null, 'left')
+                 ->addAttributeToFilter('category_id', array('in' => $values['category']));
+            $this->getProductCollection()->getSelect()->group('e.entity_id');
+        }
+        if (($allConditions) || (isset($values['category']) && count($values['category']) > 0)) {
             $this->getProductCollection()->addFieldsToFilter($allConditions);
         } else if (!$hasConditions) {
             Mage::throwException(Mage::helper('catalogsearch')->__('Please specify at least one search term.'));
         }
-
         return $this;
     }
 
@@ -288,7 +295,18 @@ class Mage_CatalogSearch_Model_Advanced extends Mage_Core_Model_Abstract
      */
     public function getSearchCriterias()
     {
-        return $this->_searchCriterias;
+        $search = $this->_searchCriterias;
+        /* for displaying the category filter */
+        $categories = $this->_searchCategories;
+        if(count($categories) > 0) {
+            $cats_array = array();
+            foreach ($categories as $cat) {
+                $category = Mage::getModel('catalog/category')->load($cat);
+                array_push($cats_array, $category->getName());
+            }
+            $search[] = array('name'=>'Subject','value'=>implode(', ', $cats_array));
+        }
+        return $search;
     }
 
     /**

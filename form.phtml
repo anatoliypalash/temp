@@ -87,6 +87,27 @@
         </li>
         <?php endif; ?>
         <?php $_counter++; endforeach; ?>
+        <!---Adding subject multiselect field------>
+        <li class="fields">
+            <div class="field">
+                <label for="category_search_field">Subject</label>
+                <select class="multiselect" name="category[]" id="category_search_field" multiple="multiple">
+                <?php foreach ($this->getStoreCategories() as $_category): ?>
+                    <?php if($_category->hasChildren()): ?>
+                        <option value="<?php echo $_category->getId(); ?>"><?php echo $_category->getName();?></option>
+                        <?php foreach ($_category->getChildren() as $subcategory):
+                            if($subcategory->getIsActive()) : ?>
+                                <option value="<?php echo $subcategory->getId(); ?>"<?php echo ($this->getRequest()->getQuery('category') == $subcategory->getId() ? ' selected="selected"': "") ?>><?php echo $subcategory->getName(); ?></option>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <?php elseif($_category->getIsActive()): ?>
+                        <option value="<?php echo $_category->getId(); ?>"><?php echo $_category->getName();?></option>
+                    <?php endif; ?>
+                <?php endforeach ?>
+                </select>
+            </div>
+         </li>
+         <!---Subject multiselect field adding end------------->
     </ul>
     <?php /*<script type="text/javascript">decorateList('advanced-search-list')</script>*/ ?>
 </div>
